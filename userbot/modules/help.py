@@ -25,11 +25,3 @@ async def help(event):
         string = string[:-2]
         await event.edit("Please specify which module you want help for!\n\n"
                          f"{string}")
-
-
-CMD_HELP.update({
-    "help": [
-        "Help",
-        "- `.help`: Gives a list of available commands"
-    ]
-})
