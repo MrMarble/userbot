@@ -4,4 +4,4 @@ venv
 docs/_build
 .env
 
-*.session
+*.session*
