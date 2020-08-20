@@ -1,9 +1,9 @@
-from platform import python_version, platform
+from platform import python_version
 
 from telethon import version
 
-from userbot.decorators import register
 from userbot import CMD_HELP
+from userbot.decorators import register
 
 
 @register(outgoing=True, pattern="^.alive$")
