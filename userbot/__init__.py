@@ -44,3 +44,6 @@ if STRING_SESSION:
     bot = TelegramClient(StringSession(STRING_SESSION), API_KEY, API_HASH)
 else:
     bot = TelegramClient("userbot", API_KEY, API_HASH)
+
+# Default variables
+CMD_HELP = {}
