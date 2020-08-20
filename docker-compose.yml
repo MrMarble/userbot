@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  userbot:
+    build: .
+    restart: unless-stopped
+    environment:
+      API_KEY: 0
+      API_HASH: ""
+      STRING_SESSION: ""
+    #volumes:
+      # uncomment this line to persist telegram session file.
+      # only required if not using STRING_SESSION
+      #./userbot.session:./userbot.session
