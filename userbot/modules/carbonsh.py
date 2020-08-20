@@ -20,7 +20,7 @@ async def carbon_image(event: NewMessage):
             await event.edit("`Generating image...`")
             await carbonsh.code_to_file(code, carbonsh.Config(font_family=carbonsh.fonts.FIRA_CODE), carbon_path,
                                         headless=True)
-            await bot.send_file(event.chat, str(carbon_file))  # TODO: This is broken sometimes
+            await bot.send_file(event.input_chat, str(carbon_file))
         except TypeError as err:
             LOGS.exception(err)
         finally:
