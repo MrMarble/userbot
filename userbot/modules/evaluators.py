@@ -176,6 +176,6 @@ CMD_HELP.update({
         'Evaluators',
         " - `.eval <expr>`: Evaluate expressions using Python's eval().\n"
         " - `.exec <script>`: Execute Python script.\n"
-        " - `.term <command>`: Execute a bash command on Paperplane server.\n"
+        " - `.term <command>`: Execute a bash command on server.\n"
     ]
 })
