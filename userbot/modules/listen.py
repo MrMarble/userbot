@@ -14,14 +14,13 @@ async def filter_incoming_handler(handler):
                 await handler.edit("`Database connections failing!`")
                 return
 
-            filters = await get_listeners(handler.chat_id)
-            if not filters:
+            listeners = await get_listeners(handler.chat_id)
+            if not listeners:
                 return
-            for trigger in filters:
+            for trigger in listeners:
                 pattern = r"( |^|[^\w])" + re.escape(
                     trigger["keyword"]) + r"( |$|[^\w])"
                 if re.search(pattern, handler.text, flags=re.IGNORECASE):
-                    await handler.reply(trigger["msg"])
                     await bot.forward_messages(BOTLOG_CHATID, handler)
                     return
     except AttributeError:
