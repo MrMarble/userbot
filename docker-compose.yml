@@ -8,7 +8,16 @@ services:
       API_KEY: 0
       API_HASH: ""
       STRING_SESSION: ""
+      MONGO_DB_URI: ""
+      BOTLOG: false
+      BOTLOG_CHAT_ID: 0
     #volumes:
       # uncomment this line to persist telegram session file.
       # only required if not using STRING_SESSION
       #./userbot.session:./userbot.session
+  database:
+    image: mongo:4.2.8
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ""
+      MONGO_INITDB_ROOT_PASSWORD: ""
