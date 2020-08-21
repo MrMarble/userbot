@@ -9,8 +9,8 @@ services:
       API_HASH: ""
       STRING_SESSION: ""
       MONGO_DB_URI: ""
-      BOTLOG: false
-      BOTLOG_CHAT_ID: 0
+      BOTLOG: 0
+      BOTLOG_CHATID: 0
     #volumes:
       # uncomment this line to persist telegram session file.
       # only required if not using STRING_SESSION

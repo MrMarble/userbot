@@ -41,8 +41,7 @@ async def add_new_filter(event):
         await event.edit("`You have to specify a chatid and a keyword!`")
         return
 
-    chat = await bot.get_entity(chat_id)
-    msg = f"`Listen to `**{keyword}**` on chat `**{chat.title if 'title' in chat else chat.name}**`"
+    msg = f"`Listen to `**{keyword}**` on chat `**{chat_id}**`"
 
     if await add_filter(chat_id, keyword) is True:
         await event.edit(f'{msg} added')
