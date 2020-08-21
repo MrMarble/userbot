@@ -1,7 +1,7 @@
 import os
 import pathlib
 
-import carbonsh
+from carbonsh import code_to_file, code_to_url, Config, fonts
 from telethon.events import NewMessage
 
 from userbot import CMD_HELP, bot, LOGS
@@ -13,13 +13,15 @@ async def carbon_image(event: NewMessage):
     """Sends code as image"""
     code = event.pattern_match.group(1)
     carbon_path = pathlib.Path().absolute().joinpath('carbon', '')
+    if not os.path.exists(carbon_path):
+        os.mkdir(carbon_path)
     carbon_file = carbon_path.joinpath('carbon.png')
 
     if code:
         try:
             await event.edit("`Generating image...`")
-            await carbonsh.code_to_file(code, carbonsh.Config(font_family=carbonsh.fonts.FIRA_CODE), carbon_path,
-                                        headless=True)
+            await code_to_file(code, Config(font_family=fonts.FIRA_CODE), carbon_path, headless=True,
+                               executablePath='/usr/bin/google-chrome-stable', args=['--no-sandbox', '--disable-gpu'])
             await bot.send_file(event.input_chat, str(carbon_file))
         except TypeError as err:
             LOGS.exception(err)
@@ -34,7 +36,7 @@ async def carbon_url(event: NewMessage):
     code = event.pattern_match.group(1)
 
     if code:
-        url = carbonsh.code_to_url(code, carbonsh.Config(font_family=carbonsh.fonts.FIRA_CODE))
+        url = code_to_url(code, Config(font_family=fonts.FIRA_CODE))
         await event.edit(url)
 
 
