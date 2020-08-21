@@ -2,7 +2,7 @@ import re
 
 from userbot import is_mongo_alive, bot, BOTLOG_CHATID, CMD_HELP
 from userbot.decorators import register
-from userbot.modules.dbhelper import add_filter, get_filters, delete_filter, get_all_filters
+from userbot.modules.dbhelper import add_filter, get_listeners, delete_listener, get_all_listeners
 
 
 @register(incoming=True, disable_errors=True)
@@ -14,7 +14,7 @@ async def filter_incoming_handler(handler):
                 await handler.edit("`Database connections failing!`")
                 return
 
-            filters = await get_filters(handler.chat_id)
+            filters = await get_listeners(handler.chat_id)
             if not filters:
                 return
             for trigger in filters:
@@ -29,7 +29,7 @@ async def filter_incoming_handler(handler):
 
 
 @register(outgoing=True, pattern="^.listen(?: |$)(-?\\d+) (\\w+)")
-async def add_new_filter(event):
+async def add_new_listener(event):
     """ Command for adding a new filter """
     if not is_mongo_alive():
         await event.edit("`Database connections failing!`")
@@ -50,7 +50,7 @@ async def add_new_filter(event):
 
 
 @register(outgoing=True, pattern="^.ignore(?: |$)(-?\\d+) (\\w+)")
-async def remove_filter(event):
+async def remove_listener(event):
     """ Command for removing a filter """
     if not is_mongo_alive():
         await event.edit("`Database connections failing!`")
@@ -61,7 +61,7 @@ async def remove_filter(event):
         await event.edit("`You have to specify a chatid and a keyword!`")
         return
 
-    if not await delete_filter(chat_id, keyword):
+    if not await delete_listener(chat_id, keyword):
         await event.edit("`Filter `**{}**` doesn't exist on {}.`".format(keyword, chat_id))
     else:
         await event.edit(
@@ -69,17 +69,17 @@ async def remove_filter(event):
 
 
 @register(outgoing=True, pattern="^.listeners$")
-async def filters_active(event):
+async def listeners_active(event):
     """ For .listeners$ command, lists all of the active listeners. """
     if not is_mongo_alive():
         await event.edit("`Database connections failing!`")
         return
 
     transact = "`There are no listeners.`"
-    listeners = await get_all_filters()
+    listeners = await get_all_listeners()
     for listener in listeners:
         if transact == "`There are no filters in this chat.`":
-            transact = "Active filters:\n"
+            transact = "Active listeners:\n"
             transact += " • **{}** - `{}`\n".format(listener["chat_id"],
                                                     listener["keyword"])
         else:
