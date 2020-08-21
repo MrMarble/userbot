@@ -6,6 +6,7 @@ from sys import version_info
 
 from environs import Env, EnvValidationError
 from pymongo import MongoClient
+from pymongo.database import Database
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 
@@ -45,7 +46,7 @@ MONGO_DB_URI: str = env.str('MONGO_DB_URI') or None
 
 # Init Mongo
 MONGOCLIENT = MongoClient(MONGO_DB_URI, serverSelectionTimeoutMS=1)
-MONGO = MONGOCLIENT.userbot
+MONGO: Database = MONGOCLIENT.userbot
 
 
 def is_mongo_alive():

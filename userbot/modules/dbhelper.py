@@ -1,8 +1,10 @@
 # Filters
+from pymongo.cursor import Cursor
+
 from userbot import MONGO
 
 
-async def get_listeners(chatid):
+async def get_listeners(chatid) -> Cursor:
     return MONGO.listeners.find({'chat_id': chatid})
 
 

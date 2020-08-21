@@ -1,30 +1,47 @@
 import re
+from datetime import timedelta
 
-from userbot import is_mongo_alive, bot, BOTLOG_CHATID, CMD_HELP
+import telethon
+
+from userbot import is_mongo_alive, bot, BOTLOG_CHATID, CMD_HELP, LOGS
 from userbot.decorators import register
 from userbot.modules.dbhelper import add_filter, get_listeners, delete_listener, get_all_listeners
 
 
 @register(incoming=True, disable_errors=True)
-async def filter_incoming_handler(handler):
+async def filter_incoming_handler(handler: telethon.events.newmessage.NewMessage):
     """ Checks if the incoming message contains handler of a filter """
     try:
-        if not (await handler.get_sender()).bot:
+        sender = await handler.get_sender()
+        if not hasattr(sender, 'bot') or not sender.bot:
             if not is_mongo_alive():
-                await handler.edit("`Database connections failing!`")
+                await bot.send_message(BOTLOG_CHATID, "`Database connections failing!`")
                 return
 
-            listeners = await get_listeners(handler.chat_id)
+            listeners = await get_listeners(str(handler.chat_id))
             if not listeners:
                 return
             for trigger in listeners:
                 pattern = r"( |^|[^\w])" + re.escape(
                     trigger["keyword"]) + r"( |$|[^\w])"
                 if re.search(pattern, handler.text, flags=re.IGNORECASE):
-                    await bot.forward_messages(BOTLOG_CHATID, handler)
+                    chat_from = handler.chat if handler.chat else (
+                        await handler.get_chat())  # telegram MAY not send the chat enity
+                    chat_title = chat_from.title if hasattr(chat_from, 'title') else handler.chat_id
+                    if hasattr(chat_from, 'megagroup'):
+                        await bot.send_message(BOTLOG_CHATID, silent=False, schedule=timedelta(minutes=1),
+                                               message=(f"`{trigger['keyword']}` **HIT**\n\n"
+                                                        f"[{chat_title}](https://t.me/{chat_title}/{handler.id})\n"
+                                                        f"{handler.text}"))
+                    else:
+                        await bot.send_message(BOTLOG_CHATID, silent=False, schedule=timedelta(minutes=1),
+                                               message=(f"`{trigger['keyword']}` **HIT**\n\n"
+                                                        f"**From**: [@{sender.first_name}](tg://user?id={sender.id})\n"
+                                                        f"**Text**: {handler.text}")
+                                               )
                     return
-    except AttributeError:
-        pass
+    except AttributeError as err:
+        LOGS.exception(f'{handler.chat_id} - {err}')
 
 
 @register(outgoing=True, pattern="^.listen(?: |$)(-?\\d+) (\\w+)")
@@ -40,7 +57,7 @@ async def add_new_listener(event):
         await event.edit("`You have to specify a chatid and a keyword!`")
         return
 
-    msg = f"`Listen to `**{keyword}**` on chat `**{chat_id}**`"
+    msg = f"`Listen to `**{keyword}**` on chat `**{chat_id}**"
 
     if await add_filter(chat_id, keyword) is True:
         await event.edit(f'{msg} added')
@@ -77,7 +94,7 @@ async def listeners_active(event):
     transact = "`There are no listeners.`"
     listeners = await get_all_listeners()
     for listener in listeners:
-        if transact == "`There are no filters in this chat.`":
+        if transact == "`There are no listeners.`":
             transact = "Active listeners:\n"
             transact += " • **{}** - `{}`\n".format(listener["chat_id"],
                                                     listener["keyword"])
