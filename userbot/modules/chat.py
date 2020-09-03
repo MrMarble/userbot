@@ -29,15 +29,21 @@ async def useridgetter(target):
             name, user.id))
 
 
-@register(outgoing=True, pattern="^.chatid$")
+@register(outgoing=True, pattern="^.chatid(?: |$)([\s\S]*)")
 async def chatidgetter(chat):
-    """ For .chatid, returns the ID of the chat you are in at that moment. """
+    """ For .chatid, returns the ID of the chat you are in at that moment or the one provided"""
+    chat_url = chat.pattern_match.group(1)
+    if chat_url:
+        chat_id = await bot(functions.channels.GetFullChannelRequest(chat_url.rsplit('/', 1)[1]))
+        await chat.edit("Chat ID: `" + str(chat_id.full_chat.id) + "`")
+        return
     await chat.edit("Chat ID: `" + str(chat.chat_id) + "`")
 
 
 CMD_HELP.update({
     "chat": [
         "Chat", " - `.chatid`: Fetch the current chat's ID.\n"
+                " - `.chatid <chat_url>`: Fetch the current chat's ID.\n"
                 " - `.userid`: Fetch the ID of the user in reply or the original author of a forwarded message.\n"
                 " - `.userid <username>`: Fetch the ID of the provided username.\n"
     ]
