@@ -1,15 +1,13 @@
 import re
 from datetime import timedelta
 
-import telethon
-
 from userbot import is_mongo_alive, bot, BOTLOG_CHATID, CMD_HELP, LOGS
 from userbot.decorators import register
 from userbot.modules.dbhelper import add_filter, get_listeners, delete_listener, get_all_listeners
 
 
 @register(incoming=True, disable_errors=True)
-async def filter_incoming_handler(handler: telethon.events.newmessage.NewMessage):
+async def filter_incoming_handler(handler):
     """ Checks if the incoming message contains handler of a filter """
     try:
         sender = await handler.get_sender()
@@ -22,26 +20,38 @@ async def filter_incoming_handler(handler: telethon.events.newmessage.NewMessage
             if not listeners:
                 return
             for trigger in listeners:
-                pattern = r"( |^|[^\w])" + re.escape(
-                    trigger["keyword"]) + r"( |$|[^\w])"
-                if re.search(pattern, handler.text, flags=re.IGNORECASE):
-                    chat_from = handler.chat if handler.chat else (
-                        await handler.get_chat())  # telegram MAY not send the chat enity
-                    chat_title = chat_from.title if hasattr(chat_from, 'title') else handler.chat_id
-                    if hasattr(chat_from, 'megagroup'):
-                        await bot.send_message(BOTLOG_CHATID, silent=False, schedule=timedelta(minutes=1),
-                                               message=(f"`{trigger['keyword']}` **HIT**\n\n"
-                                                        f"[{chat_title}](https://t.me/{chat_title}/{handler.id})\n"
-                                                        f"{handler.text}"))
-                    else:
-                        await bot.send_message(BOTLOG_CHATID, silent=False, schedule=timedelta(minutes=1),
-                                               message=(f"`{trigger['keyword']}` **HIT**\n\n"
-                                                        f"**From**: [@{sender.first_name}](tg://user?id={sender.id})\n"
-                                                        f"**Text**: {handler.text}")
-                                               )
-                    return
+                await parse_trigger(handler, sender, trigger["keyword"])
+
     except AttributeError as err:
         LOGS.exception(f'{handler.chat_id} - {err}')
+
+
+async def parse_trigger(handler, sender, trigger):
+    """ Aux function to generate trigger message """
+    pattern = r"( |^|[^\w])" + re.escape(trigger) + r"( |$|[^\w])"
+    text = handler.text
+    if re.search(pattern, text, flags=re.IGNORECASE):
+        chat_from = handler.chat if handler.chat else (
+            await handler.get_chat())  # telegram MAY not send the chat entity
+        chat_title = chat_from.title if hasattr(chat_from, 'title') else handler.chat_id
+        # Sneak peak of the message
+        trigger_index = text.index(trigger)
+        sneak_peak = text[trigger_index:trigger_index + 10]
+        if trigger_index > 10:
+            sneak_peak = handler.text[trigger_index - 10: trigger_index + len(trigger) + 10]
+        # Channel or group
+        if hasattr(chat_from, 'megagroup'):
+            from_name = chat_title
+            from_link = f"https://t.me/c/{handler.chat_id}/{handler.id}"
+        # Private chat
+        else:
+            from_name = sender.first_name
+            from_link = f"tg://openmessage?user_id={sender.id}&message_id={handler.id}"
+
+        await bot.send_message(BOTLOG_CHATID, silent=False, schedule=timedelta(minutes=1),
+                               message=(f"**HIT** `{trigger}`\n\n"
+                                        f"**From**: [{from_name}]({from_link})\n"
+                                        f"{sneak_peak}"))
 
 
 @register(outgoing=True, pattern="^.listen(?: |$)(-?\\d+) (\\w+)")
