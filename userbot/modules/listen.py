@@ -36,13 +36,17 @@ async def parse_trigger(handler, sender, trigger):
         chat_title = chat_from.title if hasattr(chat_from, 'title') else handler.chat_id
         # Sneak peak of the message
         trigger_index = text.index(trigger)
-        sneak_peak = text[trigger_index:trigger_index + 10]
+        sneak_peak = text[trigger_index:trigger_index + 15]
         if trigger_index > 10:
-            sneak_peak = handler.text[trigger_index - 10: trigger_index + len(trigger) + 10]
+            sneak_peak = handler.text[trigger_index - 10: trigger_index + len(trigger) + 15]
         # Channel or group
         if hasattr(chat_from, 'megagroup'):
             from_name = chat_title
-            from_link = f"https://t.me/c/{handler.chat_id}/{handler.id}"
+            # We need to remove -100 from Channel ID
+            if handler.chat_id < 0:
+                from_link = str(handler.chat_id)[4:]
+            else:
+                from_link = f"https://t.me/c/{handler.chat_id}/{handler.id}"
         # Private chat
         else:
             from_name = sender.first_name
@@ -51,7 +55,7 @@ async def parse_trigger(handler, sender, trigger):
         await bot.send_message(BOTLOG_CHATID, silent=False, schedule=timedelta(minutes=1),
                                message=(f"**HIT** `{trigger}`\n\n"
                                         f"**From**: [{from_name}]({from_link})\n"
-                                        f"{sneak_peak}"))
+                                        f"**Text**: {sneak_peak}"))
 
 
 @register(outgoing=True, pattern="^.listen(?: |$)(-?\\d+) (\\w+)")
