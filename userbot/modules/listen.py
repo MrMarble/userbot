@@ -52,6 +52,7 @@ async def parse_trigger(handler, sender, trigger):
             from_name = sender.first_name
             from_link = f"tg://openmessage?user_id={sender.id}&message_id={handler.id}"
 
+        from_name = from_name.replace('[', '\\[').replace(']', '\\]') # Escape markdown
         await bot.send_message(BOTLOG_CHATID, silent=False, schedule=timedelta(minutes=1),
                                message=(f"**HIT** `{trigger}`\n\n"
                                         f"**From**: [{from_name}]({from_link})\n"
