@@ -39,6 +39,7 @@ async def parse_trigger(handler, sender, trigger):
         sneak_peak = text[trigger_index:trigger_index + 15]
         if trigger_index > 10:
             sneak_peak = handler.text[trigger_index - 10: trigger_index + len(trigger) + 15]
+        sneak_peak = sneak_peak.replace('\n', ' ')
         # Channel or group
         if hasattr(chat_from, 'megagroup'):
             from_name = chat_title
@@ -52,11 +53,10 @@ async def parse_trigger(handler, sender, trigger):
             from_name = sender.first_name
             from_link = f"tg://openmessage?user_id={sender.id}&message_id={handler.id}"
 
-        from_name = from_name.replace('[', '\\[').replace(']', '\\]') # Escape markdown
         await bot.send_message(BOTLOG_CHATID, silent=False, schedule=timedelta(minutes=1),
-                               message=(f"**HIT** `{trigger}`\n\n"
-                                        f"**From**: [{from_name}]({from_link})\n"
-                                        f"**Text**: {sneak_peak}"))
+                               parse_mode='HTML', message=(f"<b>HIT</b> <code>{trigger}</code>\n\n"
+                                                           f"<b>FROM</b>: <a href='{from_link}'>{from_name}</a>\n"
+                                                           f"<b>TEXT</b>: {sneak_peak}"))
 
 
 @register(outgoing=True, pattern="^.listen(?: |$)(-?\\d+) (\\w+)")
