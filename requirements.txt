@@ -2,3 +2,4 @@ telethon==1.16.2
 carbonsh>=0.0.9
 environs==8.0.0
 pymongo==3.11.0
+Markdown==3.2.2

@@ -4,9 +4,10 @@ from datetime import timedelta
 from userbot import is_mongo_alive, bot, BOTLOG_CHATID, CMD_HELP, LOGS
 from userbot.decorators import register
 from userbot.modules.dbhelper import add_filter, get_listeners, delete_listener, get_all_listeners
+from userbot.modules.markdown import unmark
 
 
-@register(incoming=True, disable_errors=True)
+@register(incoming=True, outgoing=True, disable_errors=True)
 async def filter_incoming_handler(handler):
     """ Checks if the incoming message contains handler of a filter """
     try:
@@ -29,25 +30,30 @@ async def filter_incoming_handler(handler):
 async def parse_trigger(handler, sender, trigger):
     """ Aux function to generate trigger message """
     pattern = r"( |^|[^\w])" + re.escape(trigger) + r"( |$|[^\w])"
-    text = handler.text
+    text = unmark(handler.text)
     if re.search(pattern, text, flags=re.IGNORECASE):
         chat_from = handler.chat if handler.chat else (
             await handler.get_chat())  # telegram MAY not send the chat entity
         chat_title = chat_from.title if hasattr(chat_from, 'title') else handler.chat_id
+
         # Sneak peak of the message
-        trigger_index = text.index(trigger)
-        sneak_peak = text[trigger_index:trigger_index + 15]
-        if trigger_index > 10:
-            sneak_peak = handler.text[trigger_index - 10: trigger_index + len(trigger) + 15]
-        sneak_peak = sneak_peak.replace('\n', ' ')
+        trigger_index = text.find(trigger)
+        sneak_peak = text
+        if trigger_index >= 0:
+            sneak_peak = text[trigger_index:trigger_index + 15]
+            if trigger_index > 10:
+                sneak_peak = handler.text[trigger_index - 10: trigger_index + len(trigger) + 15]
+            sneak_peak = sneak_peak.replace('\n', ' ')
+
         # Channel or group
-        if hasattr(chat_from, 'megagroup'):
+        if handler.chat_id < 0:
             from_name = chat_title
             # We need to remove -100 from Channel ID
-            if handler.chat_id < 0:
-                from_link = str(handler.chat_id)[4:]
+            if '-100' in str(handler.chat_id)[0:4]:
+                from_link = f"https://t.me/c/{str(handler.chat_id)[4:]}/{handler.id}"
             else:
-                from_link = f"https://t.me/c/{handler.chat_id}/{handler.id}"
+                from_link = f"https://t.me/c/{str(handler.chat_id)[1:]}/{handler.id}"
+
         # Private chat
         else:
             from_name = sender.first_name

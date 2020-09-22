@@ -5,3 +5,4 @@ docs/_build
 .env
 __pycache__
 *.session*
+local.yml
