@@ -31,6 +31,7 @@ async def parse_trigger(handler, sender, trigger):
     """ Aux function to generate trigger message """
     pattern = r"( |^|[^\w])" + re.escape(trigger) + r"( |$|[^\w])"
     text = unmark(handler.text)
+    offset = 15
     if re.search(pattern, text, flags=re.IGNORECASE):
         chat_from = handler.chat if handler.chat else (
             await handler.get_chat())  # telegram MAY not send the chat entity
@@ -39,11 +40,11 @@ async def parse_trigger(handler, sender, trigger):
         # Sneak peak of the message
         trigger_index = text.find(trigger)
         sneak_peak = text
-        if trigger_index >= 0:
-            sneak_peak = text[trigger_index:trigger_index + 15]
-            if trigger_index > 10:
-                sneak_peak = handler.text[trigger_index - 10: trigger_index + len(trigger) + 15]
-            sneak_peak = sneak_peak.replace('\n', ' ')
+        if trigger_index > offset:
+            sneak_peak = text[trigger_index - offset:trigger_index + len(trigger) + offset]
+        else:
+            sneak_peak = text[0: trigger_index + len(trigger) + offset]
+        sneak_peak = sneak_peak.replace('\n', ' ')
 
         # Channel or group
         if handler.chat_id < 0:
@@ -65,7 +66,7 @@ async def parse_trigger(handler, sender, trigger):
                                                            f"<b>TEXT</b>: {sneak_peak}"))
 
 
-@register(outgoing=True, pattern="^.listen(?: |$)(-?\\d+) (\\w+)")
+@register(outgoing=True, pattern="^.listen(?: |$)(-?\\d+) ([\\w\\s]+)")
 async def add_new_listener(event):
     """ Command for adding a new filter """
     if not is_mongo_alive():
@@ -86,7 +87,7 @@ async def add_new_listener(event):
         await event.edit(f'{msg} already exist')
 
 
-@register(outgoing=True, pattern="^.ignore(?: |$)(-?\\d+) (\\w+)")
+@register(outgoing=True, pattern="^.ignore(?: |$)(-?\\d+) ([\\w\\s]+)")
 async def remove_listener(event):
     """ Command for removing a filter """
     if not is_mongo_alive():
